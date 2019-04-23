@@ -2,6 +2,7 @@
 
 # Importando as bibliotecas necessárias.
 import pygame
+import random
 from os import path
 
 # Estabelece a pasta que contem as figuras.
@@ -46,6 +47,60 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         
+        #Velocidade da nave
+        self.speedx = 0
+        
+    # Metodo que atualiza a posicao da navinha
+    def update(self):
+        self.rect.x += self.speedx
+        
+        # Mantem dentro da tela
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        if self.rect.left < 0:
+            self.rect.left = 0
+            
+#Classe Mob que representa os meteoros
+class Mob(pygame.sprite.Sprite):
+    
+    #Construtor da classe
+    def __init__(self):
+        
+        #Construtor da classe mãe (Sprite)
+        pygame.sprite.Sprite.__init__(self)
+        
+        #Carregando a imagem de fundo
+        mob_img = pygame.image.load(path.join(img_dir, "meteorBrown_med1.png")).convert()
+        self.img = mob_img
+        
+        #Diminuindo o tamanho da imagem
+        self.image = pygame.transform.scale(mob_img, (50,38))
+        
+        #Deixando transparente
+        self.image.set_colorkey(BLACK)
+        
+        #Detalhes sobre posicionamento
+        self.rect = self.image.get_rect()
+        
+        #Centraliza embaixo da tela
+        self.rect.centerx = random.randrange(0,WIDTH)
+        self.rect.bottom = random.randrange(-100,-40)
+        
+        #Velocidade da nave
+        self.speedx = random.randrange(-3,3)
+        self.speedy = random.randrange(2,9)
+        
+     # Metodo que atualiza a posicao da navinha
+    def update(self):
+        self.rect.x += self.speedx
+        self.rect.y += self.speedy
+        
+        # Mantem dentro da tela
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        if self.rect.left < 0:
+            self.rect.left = 0
+        
 # Inicialização do Pygame.
 pygame.init()
 pygame.mixer.init()
@@ -59,9 +114,22 @@ pygame.display.set_caption("Asteroids")
 # Variável para o ajuste de velocidade
 clock = pygame.time.Clock()
 
-# Carrega o fundo do jogo
+# Carrega o fundo do jogo`x
 background = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
 background_rect = background.get_rect()
+
+# Cria uma nave. O construtor será chamado automaticamente
+player = Player()
+
+# Cria os asteroides
+mobs = list()
+for i in range (8):
+    mobs.append(Mob())
+
+#Cria um grupo de sprites e adiciona a nave
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+all_sprites.add(mobs)
 
 # Comando para evitar travamentos.
 try:
@@ -79,6 +147,28 @@ try:
             # Verifica se foi fechado
             if event.type == pygame.QUIT:
                 running = False
+                
+            #Verifica se apertou alguma tecla
+            if event.type == pygame.KEYDOWN:
+                #Dependendo da tecla, altera a velocidade
+                if event.key == pygame.K_LEFT:
+                    player.speedx = -8
+                if event.key == pygame.K_RIGHT:
+                    player.speedx = 8
+            
+            #Verifica se soltou alguma tecla
+            if event.type == pygame.KEYUP:
+                #Dependendo da tecla, altera a velocidade
+                if event.key == pygame.K_LEFT: 
+                    player.speedx = 0
+                if event.key == pygame.K_RIGHT:
+                    player.speedx = 0
+                    
+        # Depois de processar os eventos
+        # Atualiza a acao de cada sprite
+        all_sprites.update()
+           
+        
     
         # A cada loop, redesenha o fundo e os sprites
         screen.fill(BLACK)
